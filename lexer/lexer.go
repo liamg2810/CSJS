@@ -5,13 +5,13 @@ import (
 	"regexp"
 )
 
-const input string = "str x = \"Hello World\"; int y = 17; float z = 19.2";
+const input string = "str x = \"Hello World\"; int y = 17; float z = 19.2;";
 
 var floatRegex *regexp.Regexp;
 var intRegex *regexp.Regexp;
 
-func Parse() {
-	tokens := []any {};
+func Parse() []Token {
+	tokens := []Token {};
 
 	parseStr := false
 	parsingStr := ""
@@ -25,7 +25,7 @@ func Parse() {
 
 		if (parseStr) {
 			if (char == "\"") {
-				tokens = append(tokens, LIT{data: parsingStr, dataType: "str"})
+				tokens = append(tokens, Token{Type: STRING, Value: parsingStr})
 				parseStr = false
 				parsingStr = ""
 				continue
@@ -41,11 +41,11 @@ func Parse() {
 			parseStr = true
 		
 		case "=":
-			tokens = append(tokens, OP{operand: "assign"})
+			tokens = append(tokens, Token{Type: ASSIGN, Value: "="})
 		
 		case ";":
 			AddToken(&tokens, &lit)
-			tokens = append(tokens, EOL{})
+			tokens = append(tokens, Token{Type: EOL, Value: ";"})
 
 		case " ":
 			AddToken(&tokens, &lit)
@@ -60,23 +60,27 @@ func Parse() {
 	for _, item := range tokens {
 		fmt.Printf("%T %+v\n", item, item)
 	}
+
+	return tokens
 }
 
-func AddToken(tokens *[]any, lit *string) {
+func AddToken(tokens *[]Token, lit *string) {
 	if (*lit == "") {
 		return
 	}
 
 	if (*lit == "str") {
-		*tokens = append(*tokens, DATATYPE{name: "str"})
+		*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "str"})
 	} else if (*lit == "int") {
-		*tokens = append(*tokens, DATATYPE{name: "int"})
+		*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "int"})
 	} else if (*lit == "float") {
-		*tokens = append(*tokens, DATATYPE{name: "float"})
+		*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "float"})
 	} else if (intRegex.MatchString(*lit)) {
-		*tokens = append(*tokens, LIT{data: *lit, dataType: "int"})
+		*tokens = append(*tokens, Token{Type: INT, Value: *lit})
 	} else if (floatRegex.MatchString(*lit)) {
-		*tokens = append(*tokens, LIT{data: *lit, dataType: "float"})
+		*tokens = append(*tokens, Token{Type: FLOAT, Value: *lit})
+	} else {
+		*tokens = append(*tokens, Token{Type: IDENT, Value: *lit})
 	}
 
 	*lit = ""
