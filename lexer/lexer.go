@@ -5,12 +5,10 @@ import (
 	"regexp"
 )
 
-const input string = "str x = \"Hello World\"; int y = 17; float z = 19.2;";
-
 var floatRegex *regexp.Regexp;
 var intRegex *regexp.Regexp;
 
-func Parse() []Token {
+func Parse(input string) []Token {
 	tokens := []Token {};
 
 	parseStr := false
@@ -36,6 +34,9 @@ func Parse() []Token {
 		}
 
 		switch char {
+		case "\n":
+			continue
+
 		case "\"":
 			AddToken(&tokens, &lit)
 			parseStr = true
@@ -56,10 +57,6 @@ func Parse() []Token {
 	}
 
 	AddToken(&tokens, &lit)
-
-	for _, item := range tokens {
-		fmt.Printf("%T %+v\n", item, item)
-	}
 
 	return tokens
 }

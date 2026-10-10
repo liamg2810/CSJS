@@ -1,0 +1,4 @@
+str x = "Hello World";
+int y = 17;
+float z = 19.2;
+str a = x;
