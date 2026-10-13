@@ -16,11 +16,17 @@ func main() {
 		panic(err)
 	}
 
-	tokens := lexer.Parse(*contents)
+	tokens, err := lexer.Parse(*contents)
+
+	fmt.Printf("%+v\n", tokens)
+
+	if err != nil {
+		panic(err)
+	}
 
 	built, err := ast.Build(tokens)
 
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 

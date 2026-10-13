@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 )
@@ -8,76 +9,128 @@ import (
 var floatRegex *regexp.Regexp;
 var intRegex *regexp.Regexp;
 
-func Parse(input string) []Token {
+func Parse(input string) ([]Token, error) {
 	tokens := []Token {};
 
 	parseStr := false
 	parsingStr := ""
 	lit := ""
+	skip := false
 
-	floatRegex = regexp.MustCompile(`^\d*\.\d*$`)
+	floatRegex = regexp.MustCompile(`^\d+\.\d+$`)
 	intRegex = regexp.MustCompile(`^\d*$`)
 
-	for _, i := range input  {
-		char := string(i)
+	for ix, char := range input  {
+		if (skip) {
+			skip = false
+			continue
+		}
 
 		if (parseStr) {
-			if (char == "\"") {
+			if (char == '\\') {
+				escaped, err := escapeCharacter(input, ix);
+
+				if (err != nil) {
+					return nil, err
+				}
+
+				skip = true
+				parsingStr = parsingStr + escaped
+
+				continue
+			}
+
+			if (char == '"') {
 				tokens = append(tokens, Token{Type: STRING, Value: parsingStr})
 				parseStr = false
 				parsingStr = ""
 				continue
 			}
 
-			parsingStr = fmt.Sprintf("%s%s", parsingStr, char)
+			parsingStr = fmt.Sprintf("%s%c", parsingStr, char)
 			continue
 		}
 
+		
 		switch char {
-		case "\n":
+		case '\n':
 			continue
 
-		case "\"":
-			AddToken(&tokens, &lit)
+		case '"':
+			AddToken(&tokens, &lit, nil)
 			parseStr = true
 		
-		case "=":
-			tokens = append(tokens, Token{Type: ASSIGN, Value: "="})
+		case '=':
+			AddToken(&tokens, &lit, &Token{Type: ASSIGN, Value: "="})
 		
-		case ";":
-			AddToken(&tokens, &lit)
-			tokens = append(tokens, Token{Type: EOL, Value: ";"})
+		case ';':
+			AddToken(&tokens, &lit, &Token{Type: EOL, Value: ";"})
 
-		case " ":
-			AddToken(&tokens, &lit)
+		case ' ':
+			AddToken(&tokens, &lit, nil)
+
+		case '+':
+			AddToken(&tokens, &lit, &Token{Type: ADD, Value: "+"})
+
+		case '-':
+			AddToken(&tokens, &lit, &Token{Type: SUBTRACT, Value: "-"})
+
+		case '*':
+			AddToken(&tokens, &lit, &Token{Type: MULTIPLY, Value: "*"})
+
+		case '/':
+			AddToken(&tokens, &lit, &Token{Type: DIVIDE, Value: "/"})
 
 		default:
-			lit = fmt.Sprintf("%s%s", lit, char)
+			lit = fmt.Sprintf("%s%c", lit, char)
 		}
 	}
 
-	AddToken(&tokens, &lit)
+	AddToken(&tokens, &lit, nil)
 
-	return tokens
+	return tokens, nil
 }
 
-func AddToken(tokens *[]Token, lit *string) {
-	if (*lit == "") {
-		return
+func escapeCharacter(input string, index int) (string, error) {
+	if (index + 1 >= len(input)) {
+		return "", errors.New("Invalid escape charater at end of input")
 	}
 
-	if (*lit == "str") {
-		*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "str"})
-	} else if (*lit == "int") {
-		*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "int"})
-	} else if (*lit == "float") {
-		*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "float"})
-	} else if (intRegex.MatchString(*lit)) {
-		*tokens = append(*tokens, Token{Type: INT, Value: *lit})
-	} else if (floatRegex.MatchString(*lit)) {
-		*tokens = append(*tokens, Token{Type: FLOAT, Value: *lit})
-	} else {
-		*tokens = append(*tokens, Token{Type: IDENT, Value: *lit})
+	char := input[index + 1]
+
+	switch (char) {
+		case '\\':
+			return "\\", nil;
+		case 'n':
+			return "\n", nil;
+		case '"':
+			return "\"", nil;
+		default:
+			return "", fmt.Errorf("Unsupported escape code: %c", char)
+	}
+}
+
+
+func AddToken(tokens *[]Token, lit *string, extra *Token) {
+
+	if *lit != "" {
+		if *lit == "str" {
+			*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "str"})
+		} else if *lit == "int" {
+			*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "int"})
+		} else if *lit == "float" {
+			*tokens = append(*tokens, Token{Type: DATA_TYPE, Value: "float"})
+		} else if intRegex.MatchString(*lit) {
+			*tokens = append(*tokens, Token{Type: INT, Value: *lit})
+		} else if floatRegex.MatchString(*lit) {
+			*tokens = append(*tokens, Token{Type: FLOAT, Value: *lit})
+		} else {
+			*tokens = append(*tokens, Token{Type: IDENT, Value: *lit})
+		}
+	}
+
+	if extra != nil {
+		*tokens = append(*tokens, *extra)
 	}
 
 	*lit = ""
