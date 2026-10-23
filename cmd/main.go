@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -18,8 +19,6 @@ func main() {
 
 	tokens, err := lexer.Parse(*contents)
 
-	fmt.Printf("%+v\n", tokens)
-
 	if err != nil {
 		panic(err)
 	}
@@ -30,11 +29,13 @@ func main() {
 		panic(err)
 	}
 
-	for _, ast := range built {
-		fmt.Printf("%T: %+v\n", ast, ast)
+	data, err := json.MarshalIndent(built, "", " ")
+
+	if err != nil {
+		panic(err)
 	}
 
-	fmt.Printf("%+v\n", built)
+	fmt.Println(string(data))
 }
 
 func extractContents(path string) (*string, error) {

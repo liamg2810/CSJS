@@ -65,10 +65,11 @@ func parseAssign(tokens *[]lexer.Token, startIx int, skip *int, variables *[]Var
 	(*skip)++
 
 	hitEOL := false
+	eolPos := 0
 
 	// Ignoring BODMAS for now
 	isEquation := false
-	tokensToRead := []lexer.Token {}
+	tokensToRead := []lexer.Token{}
 
 	// Grabbing tokens to fucking figure out
 	for i := startIx + 3; i < len(*tokens); i++ {
@@ -77,9 +78,11 @@ func parseAssign(tokens *[]lexer.Token, startIx int, skip *int, variables *[]Var
 		switch token.Type {
 		case lexer.EOL:
 			hitEOL = true
-		case lexer.ADD, lexer.SUBTRACT, lexer.DIVIDE, lexer.MULTIPLY:
+			eolPos = i
+		case lexer.ADD, lexer.SUBTRACT:
 			isEquation = true
-			tokensToRead = append(tokensToRead, token)
+		case lexer.DIVIDE, lexer.MULTIPLY:
+			isEquation = true
 		case lexer.INT, lexer.STRING, lexer.FLOAT:
 			tokensToRead = append(tokensToRead, token)
 		case lexer.IDENT:
@@ -115,17 +118,15 @@ func parseAssign(tokens *[]lexer.Token, startIx int, skip *int, variables *[]Var
 			dataType := Int
 
 			switch (token.Type) {
-			case lexer.INT:
-				i, _ := strconv.ParseInt(token.Value, 10, 0)
-				dataType = Int
-				expression = LiteralExpression[int64]{ Data: i, DataType: dataType }
-			case lexer.FLOAT:
-				i, _ := strconv.ParseFloat(token.Value, 0)
-				dataType = Float
-				expression = LiteralExpression[float64]{ Data: i, DataType: dataType }
-			case lexer.STRING:
-				dataType = String
-				expression = LiteralExpression[string]{ Data: token.Value, DataType: dataType }
+			case lexer.INT, lexer.FLOAT, lexer.STRING:
+				e, err := getLiteralExpression(&token)
+
+				if err != nil {
+					return nil, err;
+				}
+
+				expression = e
+				dataType = e.GetDataType()
 			case lexer.IDENT:
 				// Already confirmed the ix exists earlier in the code (this code so messy dude) make this a map[string]DataType{}
 				ix := slices.IndexFunc(*variables, func (v VariableExpression) bool { return v.Name == token.Value })
@@ -143,5 +144,155 @@ func parseAssign(tokens *[]lexer.Token, startIx int, skip *int, variables *[]Var
 		}
 	}
 
-	return nil, errors.New("parseAssign: Equations not yet supported")
+	slice := (*tokens)[startIx + 3:eolPos]
+		for _, token := range slice {
+			fmt.Printf("%+v", token)
+		}
+	binaryExpression, err := buildBinaryExpression(&slice)
+
+	if (err != nil) {
+		return nil, err
+	}
+
+	return &Assignment{ Name: name.Value, Value: *binaryExpression, DataType: binaryExpression.GetDataType() }, nil
+}
+
+// for now will not allow variables in the equations
+func buildBinaryExpression(equation *[]lexer.Token) (*BinaryExpression, error) {
+	// first find all symbol types in the equation
+
+	// Multiple + Divide
+	md := []int{}
+	// Add + Subtract
+	as := []int{}
+
+	for i, token := range *equation {
+		switch (token.Type) {
+		case lexer.MULTIPLY, lexer.DIVIDE:
+			md = append(md, i)
+		case lexer.ADD, lexer.SUBTRACT:
+			as = append(as, i)
+		default:
+			continue
+		}
+	}
+
+	// then recursively solve equation (excluding parenthesis and exponents)
+	i := 0
+
+	if len(as) > 0 {
+		i = as[len(as)-1]
+	} else if len(md) > 0 {
+		i = md[len(md)-1]
+	} else {
+		return nil, fmt.Errorf("buildBinaryExpression: Malformed equation")
+	}
+
+	if (i == 0 || i == len(*equation) - 1) {
+		return nil, fmt.Errorf("buildBinaryExpression: Malformed equation, as operation out of bounds")
+	}
+
+	token := (*equation)[i]
+
+	operand, err := getOperandFromToken(&token)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var left IExpression
+	var right IExpression
+
+	if (i > 1) {
+		fmt.Printf("entering LHS recursion")
+		slice := (*equation)[0:i]
+		leftExp, err := buildBinaryExpression(&slice)
+
+		if err != nil {
+			return nil, err
+		}
+
+		left = *leftExp
+	} else {
+		token := (*equation)[i - 1]
+		left, err = getLiteralExpression(&token)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if (i < len(*equation) - 2) {
+		fmt.Printf("entering RHS recursion")
+		slice := (*equation)[i+1:len(*equation)]
+		rightExp, err := buildBinaryExpression(&slice)
+
+		if err != nil {
+			return nil, err
+		}
+
+		right = *rightExp
+	} else {
+		token := (*equation)[i + 1]
+		right, err = getLiteralExpression(&token)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if left.GetDataType() != Float && left.GetDataType() != Int {
+		return nil, fmt.Errorf("buildBinaryExpression: LHS as not int or float")
+	}
+
+	if right.GetDataType() != Float && right.GetDataType() != Int {
+		return nil, fmt.Errorf("buildBinaryExpression: LHS as not int or float")
+	}
+
+	dataType := Int
+
+	// Assumes that the expression only contains numbers
+	if (left.GetDataType() == Float || right.GetDataType() == Float) {
+		dataType = Float
+	}
+
+	fmt.Printf("Left: %+v\n", left)
+	fmt.Printf("Right: %+v\n", right)
+
+	expression := BinaryExpression{Operand: operand, Left: left, Right: right, DataType: dataType}
+
+	return &expression, nil
+}
+
+func getOperandFromToken(token *lexer.Token) (BinaryOperator, error) {
+	switch ((*token).Type) {
+	case lexer.ADD:
+		return Add, nil
+	case lexer.SUBTRACT:
+		return Subtract, nil
+	case lexer.DIVIDE:
+		return Divide, nil
+	case lexer.MULTIPLY:
+		return Multiply, nil
+	default:
+		return Add, fmt.Errorf("Invalid operand type %+v", token)
+	}
+}
+
+func getLiteralExpression(token *lexer.Token) (IExpression, error) {
+	switch (token.Type) {
+	case lexer.INT:
+		i, _ := strconv.ParseInt(token.Value, 10, 0)
+		expression := LiteralExpression[int64]{ Data: i, DataType: Int }
+		return expression, nil
+	case lexer.FLOAT:
+		i, _ := strconv.ParseFloat(token.Value, 0)
+		expression := LiteralExpression[float64]{ Data: i, DataType: Float }
+		return expression, nil
+	case lexer.STRING:
+		expression := LiteralExpression[string]{ Data: token.Value, DataType: String }
+		return expression, nil
+	default:
+		return nil, errors.New("parseAssign: Bad data type on expression")
+	}
 }

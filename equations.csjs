@@ -1,0 +1,12 @@
+int basicAdd = 7 + 2;
+int multipleThenAdd = 7 * 2 + 4;
+int addThenMultiply = 7 + 2 * 4;
+int divideThenMultiple = 7 / 2 * 4;
+float floatAddInt = 7.2 + 4;
+int divideThree = 8 / 8 / 8;
+int subtractThree = 8 - 8 - 8;
+int bigBoi = 8 + 2 * 12 / 13 + 123 - -21;
+int basicSubtract = 8 - 8;
+int negativeAddPositive = -8 + 2;
+int what = 8 / 2 * 3 + 4 - 1;
+int noSpaces = 8/5*3+4-1--2;

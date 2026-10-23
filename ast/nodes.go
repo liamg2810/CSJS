@@ -10,6 +10,7 @@ type INode interface {
 type IExpression interface {
 	INode
 	expression()
+	GetDataType() DataType
 }
 
 type IAssignment interface {
@@ -42,15 +43,24 @@ type Assignment struct {
 
 func (LiteralExpression[T]) node() {}
 func (LiteralExpression[T]) expression() {}
+func (l LiteralExpression[T]) GetDataType() DataType {
+	return l.DataType 
+}
 
 func (BinaryExpression) node() {}
 func (BinaryExpression) expression() {}
+func (b BinaryExpression) GetDataType() DataType {
+	return b.DataType 
+}
 
 func (Assignment) node() {}
 func (Assignment) assignment() {}
 
 func (VariableExpression) node() {}
 func (VariableExpression) expression() {}
+func (v VariableExpression) GetDataType() DataType {
+	return v.DataType 
+}
 
 const (
 	Add BinaryOperator = iota

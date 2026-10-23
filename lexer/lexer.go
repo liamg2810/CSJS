@@ -17,8 +17,8 @@ func Parse(input string) ([]Token, error) {
 	lit := ""
 	skip := false
 
-	floatRegex = regexp.MustCompile(`^\d+\.\d+$`)
-	intRegex = regexp.MustCompile(`^\d*$`)
+	floatRegex = regexp.MustCompile(`^-?\d+\.\d+$`)
+	intRegex = regexp.MustCompile(`^-?\d*$`)
 
 	for ix, char := range input  {
 		if (skip) {
@@ -73,7 +73,11 @@ func Parse(input string) ([]Token, error) {
 			AddToken(&tokens, &lit, &Token{Type: ADD, Value: "+"})
 
 		case '-':
-			AddToken(&tokens, &lit, &Token{Type: SUBTRACT, Value: "-"})
+			if lit == "" && intRegex.MatchString(string(input[ix+1])) {
+					lit = fmt.Sprintf("%s%c", lit, char)
+			} else {
+				AddToken(&tokens, &lit, &Token{Type: SUBTRACT, Value: "-"})
+			}
 
 		case '*':
 			AddToken(&tokens, &lit, &Token{Type: MULTIPLY, Value: "*"})

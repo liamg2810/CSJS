@@ -2,3 +2,4 @@ str x = "Hello\\\n \"World\"";
 int y = 17;
 float z = 19.2;
 str a = x;
+int b = 12 + 2;
