@@ -85,6 +85,12 @@ func Parse(input string) ([]Token, error) {
 		case '/':
 			AddToken(&tokens, &lit, &Token{Type: DIVIDE, Value: "/"})
 
+		case '(':
+			AddToken(&tokens, &lit, &Token{Type: LPAREN, Value: "("})
+
+		case ')':
+			AddToken(&tokens, &lit, &Token{Type: RPAREN, Value: ")"})
+
 		default:
 			lit = fmt.Sprintf("%s%c", lit, char)
 		}

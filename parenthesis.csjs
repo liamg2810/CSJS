@@ -1,0 +1,9 @@
+int parenLeftSide = (1 + 2) * 3;
+int parenRightSide = 3 * (1 + 2);
+int parenBothSide = (1 + 2) * (2 + 3);
+int nestedParen = ((1 + 2) * 3 + (2)) + 4;
+int literalParen = (((((8)))));
+int evil = (((1 + (2 * (3 + 4))) + 5) * (6 + 7));
+int precedence = 1 + 2 * 3;
+int associativity = 10 - 3 - 2;
+int negative = -(1 + 2);

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	contents, err := extractContents("./exampleScript.csjs")
+	contents, err := extractContents("./variables.csjs")
 
 	if err != nil {
 		panic(err)
@@ -35,7 +35,11 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(string(data))
+	if err := writeContents("./output.json", data); err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("output to json\n")
 }
 
 func extractContents(path string) (*string, error) {
@@ -62,4 +66,8 @@ func extractContents(path string) (*string, error) {
 	}
 
 	return &output, nil
+}
+
+func writeContents(path string, contents []byte) error {
+	return os.WriteFile(path, contents, 0666)
 }
