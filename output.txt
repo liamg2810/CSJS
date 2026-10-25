@@ -1,0 +1,251 @@
+├── Assignment: a
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 10 (DataType: Int)
+│       │   ├── Operator: Subtract
+│       │   └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: b
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 24 (DataType: Int)
+│       │   ├── Operator: Divide
+│       │   └── LiteralExpression[int64]: 4 (DataType: Int)
+│       ├── Operator: Divide
+│       └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: c
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 10 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: d
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       ├── Operator: Add
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 3 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── LiteralExpression[int64]: 4 (DataType: Int)
+
+├── Assignment: e
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 20 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 6 (DataType: Int)
+│           ├── Operator: Divide
+│           └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: f
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       │   ├── Operator: Multiply
+│       │   └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Add
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 4 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── LiteralExpression[int64]: 5 (DataType: Int)
+
+├── Assignment: g
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Multiply
+│       └── LiteralExpression[int64]: 4 (DataType: Int)
+
+├── Assignment: h
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       ├── Operator: Multiply
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 3 (DataType: Int)
+│           ├── Operator: Add
+│           └── LiteralExpression[int64]: 4 (DataType: Int)
+
+├── Assignment: i
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Multiply
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 4 (DataType: Int)
+│           ├── Operator: Add
+│           └── LiteralExpression[int64]: 5 (DataType: Int)
+
+├── Assignment: j
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── BinaryExpression (DataType: Int)
+│       │       ├── LiteralExpression[int64]: 3 (DataType: Int)
+│       │       ├── Operator: Multiply
+│       │       └── LiteralExpression[int64]: 4 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── LiteralExpression[int64]: 5 (DataType: Int)
+
+├── Assignment: k
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Multiply
+│       └── LiteralExpression[int64]: 4 (DataType: Int)
+
+├── Assignment: l
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       ├── Operator: Multiply
+│       └── BinaryExpression (DataType: Int)
+│           ├── BinaryExpression (DataType: Int)
+│           │   ├── LiteralExpression[int64]: 3 (DataType: Int)
+│           │   ├── Operator: Add
+│           │   └── LiteralExpression[int64]: 4 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: m
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       ├── Operator: Add
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 3 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── BinaryExpression (DataType: Int)
+│               ├── LiteralExpression[int64]: 4 (DataType: Int)
+│               ├── Operator: Add
+│               └── LiteralExpression[int64]: 1 (DataType: Int)
+
+├── Assignment: n
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 5 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── BinaryExpression (DataType: Int)
+│       │       ├── LiteralExpression[int64]: 4 (DataType: Int)
+│       │       ├── Operator: Subtract
+│       │       └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Add
+│       └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: o
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 10 (DataType: Int)
+│       │   ├── Operator: Multiply
+│       │   └── BinaryExpression (DataType: Int)
+│       │       ├── LiteralExpression[int64]: 2 (DataType: Int)
+│       │       ├── Operator: Add
+│       │       └── LiteralExpression[int64]: 3 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 4 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: p
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 8 (DataType: Int)
+│       │   ├── Operator: Subtract
+│       │   └── BinaryExpression (DataType: Int)
+│       │       ├── LiteralExpression[int64]: 3 (DataType: Int)
+│       │       ├── Operator: Add
+│       │       └── LiteralExpression[int64]: 1 (DataType: Int)
+│       ├── Operator: Multiply
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 2 (DataType: Int)
+│           ├── Operator: Add
+│           └── LiteralExpression[int64]: 4 (DataType: Int)
+
+├── Assignment: q
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 100 (DataType: Int)
+│       ├── Operator: Divide
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 2 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── BinaryExpression (DataType: Int)
+│               ├── LiteralExpression[int64]: 3 (DataType: Int)
+│               ├── Operator: Add
+│               └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: r
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 1 (DataType: Int)
+│       ├── Operator: Add
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 2 (DataType: Int)
+│           ├── Operator: Multiply
+│           └── BinaryExpression (DataType: Int)
+│               ├── LiteralExpression[int64]: 3 (DataType: Int)
+│               ├── Operator: Add
+│               └── BinaryExpression (DataType: Int)
+│                   ├── LiteralExpression[int64]: 4 (DataType: Int)
+│                   ├── Operator: Multiply
+│                   └── BinaryExpression (DataType: Int)
+│                       ├── LiteralExpression[int64]: 5 (DataType: Int)
+│                       ├── Operator: Subtract
+│                       └── LiteralExpression[int64]: 2 (DataType: Int)
+
+├── Assignment: s
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── LiteralExpression[int64]: 10 (DataType: Int)
+│       │   ├── Operator: Add
+│       │   └── LiteralExpression[int64]: 2 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 3 (DataType: Int)
+│           ├── Operator: Add
+│           └── LiteralExpression[int64]: 4 (DataType: Int)
+
+├── Assignment: t
+│   └── BinaryExpression (DataType: Int)
+│       ├── LiteralExpression[int64]: 10 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── BinaryExpression (DataType: Int)
+│           ├── LiteralExpression[int64]: 3 (DataType: Int)
+│           ├── Operator: Subtract
+│           └── BinaryExpression (DataType: Int)
+│               ├── LiteralExpression[int64]: 2 (DataType: Int)
+│               ├── Operator: Subtract
+│               └── LiteralExpression[int64]: 1 (DataType: Int)
+
+├── Assignment: u
+│   └── BinaryExpression (DataType: Int)
+│       ├── BinaryExpression (DataType: Int)
+│       │   ├── BinaryExpression (DataType: Int)
+│       │   │   ├── LiteralExpression[int64]: 10 (DataType: Int)
+│       │   │   ├── Operator: Add
+│       │   │   └── LiteralExpression[int64]: 2 (DataType: Int)
+│       │   ├── Operator: Multiply
+│       │   └── BinaryExpression (DataType: Int)
+│       │       ├── LiteralExpression[int64]: 3 (DataType: Int)
+│       │       ├── Operator: Add
+│       │       └── LiteralExpression[int64]: 4 (DataType: Int)
+│       ├── Operator: Subtract
+│       └── BinaryExpression (DataType: Int)
+│           ├── BinaryExpression (DataType: Int)
+│           │   ├── LiteralExpression[int64]: 8 (DataType: Int)
+│           │   ├── Operator: Divide
+│           │   └── LiteralExpression[int64]: 2 (DataType: Int)
+│           ├── Operator: Add
+│           └── LiteralExpression[int64]: 1 (DataType: Int)
+
+└── Assignment: v
+    └── LiteralExpression[int64]: 8 (DataType: Int)

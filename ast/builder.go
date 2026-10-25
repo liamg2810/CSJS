@@ -1,114 +1,92 @@
 package ast
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
-	"liamg2810.github.io/csjs/lexer"
+	"liamg2810.github.io/csjs/data"
 )
 
-func Build(tokens []lexer.Token) ([]INode, error) {
-	ret := []INode {}
+func Build(context *data.FileContext) ([]data.INode, *data.AstError) {
+	ret := []data.INode{}
+
+	tokens := context.Tokens
 
 	// Keep track of variables
-	variables := map[string]DataType{}
+	variables := map[string]data.DataType{}
 
 	for i := 0; i < len(tokens); {
-		skip := 1
-
 		token := tokens[i]
 
 		switch token.Type {
-		case lexer.DATA_TYPE:
-			node, err := parseAssign(&tokens, i, &skip, &variables)
+		case data.DATA_TYPE:
+			node, nextIx, err := parseAssign(tokens, i, variables)
 
-			if (err != nil) {
+			if err != nil {
 				return nil, err
 			}
 
 			ret = append(ret, *node)
-		default:
-			return nil, fmt.Errorf("Unknown token of type %d and value %s", token.Type, token.Value)
-		}
 
-		i += skip
+			i = nextIx + 1
+		default:
+			return nil, token.CreateAstError(fmt.Sprintf("Unknown token of type %q and value %s", token.Type, token.Value))
+		}
 	}
 
 	return ret, nil
 }
 
-func parseAssign(tokens *[]lexer.Token, startIx int, skip *int, variables *map[string]DataType) (*Assignment, error) {
-	// Read from startIx until EOL and track skip
-	*skip = 1
-
+func parseAssign(tokens []data.Token, startIx int, variables map[string]data.DataType) (*data.Assignment, int, *data.AstError) {
 	// Need format of DATA_TYPE, IDENT, ASSIGN, [... LIT | OP], EOL
-	if (startIx > len(*tokens) - 4) {
-		return nil, errors.New("parseAssign: Invalid format for assignment")
+	if startIx > len(tokens)-4 {
+		return nil, startIx, tokens[startIx].CreateAstError("Invalid format for assignment")
 	}
 
-	name := (*tokens)[startIx + 1]
+	name := tokens[startIx+1]
 
-	if (name.Type != lexer.IDENT) {
-		return nil, errors.New("parseAssign: Bad token type on variable name")
+	if name.Type != data.IDENT {
+		return nil, 0, tokens[startIx].CreateAstError("Invalid variable name")
 	}
 
-	(*skip)++
+	assign := tokens[startIx+2]
 
-	assign := (*tokens)[startIx + 2]
-
-	if (assign.Type != lexer.ASSIGN) {
-		return nil, errors.New("parseAssign: Bad assignment type")
+	if assign.Type != data.ASSIGN {
+		return nil, 0, assign.CreateAstError(fmt.Sprintf("Expected \"=\" got %q", assign.Value))
 	}
 
-	(*skip)++
+	eolPos := -1
 
-	hitEOL := false
-	eolPos := 0
-
-	for i := startIx + 3; i < len(*tokens); i++ {
-		token := (*tokens)[i]
-
-		switch token.Type {
-		case lexer.EOL:
-			hitEOL = true
+	for i := startIx + 3; i < len(tokens); i++ {
+		if tokens[i].Type == data.EOL {
 			eolPos = i
-		case lexer.LPAREN, lexer.RPAREN, lexer.INT, lexer.STRING, lexer.FLOAT, lexer.IDENT, lexer.MULTIPLY, lexer.ADD, lexer.DIVIDE, lexer.SUBTRACT:
-			// Catch all valid token types, for validation
-		default:
-			return nil, fmt.Errorf("parseAssign: Error reading value of assignment. Bad token type: %+v", (*tokens)[i])
-		}
-
-		(*skip)++
-
-		if (hitEOL) {
 			break
 		}
 	}
 
-	if (!hitEOL) {
-		return nil, errors.New("parseAssign: Never hit EOL")
+	if eolPos == -1 {
+		lastToken := tokens[len(tokens)-1]
+		return nil, 0, lastToken.CreateAstError(fmt.Sprintf("Expected \";\" got %q", lastToken.Value))
 	}
 
-	slice := (*tokens)[startIx + 3:eolPos]
-	
-	unaryFix(&slice)
+	slice := tokens[startIx+3 : eolPos]
 
-	binaryExpression, err := buildExpression(&slice, variables)
-
-	if (err != nil) {
-		return nil, err
+	if len(slice) == 0 {
+		return nil, 0, assign.CreateAstError("Expected expression after \"=\"")
 	}
 
-	(*variables)[name.Value] = binaryExpression.GetDataType()
+	binaryExpression, err := buildExpression(slice, variables)
 
-	return &Assignment{ Name: name.Value, Value: binaryExpression, DataType: binaryExpression.GetDataType() }, nil
+	if err != nil {
+		return nil, 0, err
+	}
+
+	variables[name.Value] = binaryExpression.GetDataType()
+
+	return &data.Assignment{Name: name.Value, Value: binaryExpression, DataType: binaryExpression.GetDataType()}, eolPos, nil
 }
 
-// used to be called buildBinaryExpression
-// it will now handle any type of expression
-// TODO: include variable map in the input and remove all expression code from parseAssign
-func buildExpression(equation *[]lexer.Token, variables *map[string]DataType) (IExpression, error) {
+func buildExpression(equation []data.Token, variables map[string]data.DataType) (data.IExpression, *data.AstError) {
 	// first find all symbol types in the equation
 
 	// Multiple + Divide
@@ -119,27 +97,31 @@ func buildExpression(equation *[]lexer.Token, variables *map[string]DataType) (I
 	// Parenthesis depth
 	depth := 0
 
-	for i, token := range *equation {
-		switch (token.Type) {
-		case lexer.MULTIPLY, lexer.DIVIDE:
-			if (depth == 0) {
+	for i, token := range equation {
+		switch token.Type {
+		case data.MULTIPLY, data.DIVIDE:
+			if depth == 0 {
 				md = append(md, i)
 			}
-		case lexer.ADD, lexer.SUBTRACT:
-			if (depth == 0) {
+		case data.ADD, data.SUBTRACT:
+			if depth == 0 {
 				as = append(as, i)
 			}
-		case lexer.LPAREN:
+		case data.LPAREN:
 			depth += 1
-		case lexer.RPAREN:
+		case data.RPAREN:
 			depth -= 1
 		default:
 			continue
 		}
 
-		if (depth < 0) {
-			return nil, fmt.Errorf("buildBinaryExpression: Invalid parenthesis")
+		if depth < 0 {
+			return nil, token.CreateAstError(fmt.Sprintf("Invalid parenthesis level (%d)", depth))
 		}
+	}
+
+	if depth > 0 {
+		return nil, equation[len(equation)-1].CreateAstError(fmt.Sprintf("Invalid parenthesis level (%d)", depth))
 	}
 
 	// then recursively solve equation (excluding parenthesis and exponents)
@@ -152,20 +134,35 @@ func buildExpression(equation *[]lexer.Token, variables *map[string]DataType) (I
 	} else {
 		// Literal expression checks before erroring
 		// Single number?
-		if len(*equation) == 1 {
-			token := (*equation)[0]
+		if len(equation) == 1 {
+			token := (equation)[0]
+
+			if token.Type == data.IDENT {
+				dataType, ok := variables[token.Value]
+
+				if !ok {
+					return nil, token.CreateAstError(fmt.Sprintf("Variable %q not defined.", token.Value))
+				}
+
+				return data.VariableExpression{Name: token.Value, DataType: dataType}, nil
+			}
+
 			lit, err := getLiteralExpression(&token)
 
-			if err !=  nil {
+			if err != nil {
 				return nil, err
 			}
 
 			return lit, nil
 		}
 
-		if (*equation)[0].Type == lexer.LPAREN && (*equation)[len(*equation) - 1].Type == lexer.RPAREN {
-			slice := (*equation)[1:len(*equation)-1]
-			exp, err := buildExpression(&slice, variables)
+		if (equation)[0].Type == data.LPAREN && (equation)[len(equation)-1].Type == data.RPAREN {
+			if len(equation) == 2 {
+				return nil, equation[0].CreateAstError("Empty parentheses")
+			}
+			
+			slice := equation[1 : len(equation)-1]
+			exp, err := buildExpression(slice, variables)
 
 			if err != nil {
 				return nil, err
@@ -174,14 +171,14 @@ func buildExpression(equation *[]lexer.Token, variables *map[string]DataType) (I
 			return exp, nil
 		}
 
-		return nil, fmt.Errorf("buildBinaryExpression: Malformed equation")
+		return nil, equation[0].CreateAstError("Equation with no operations")
 	}
 
-	if (i == 0 || i == len(*equation) - 1) {
-		return nil, fmt.Errorf("buildBinaryExpression: Malformed equation, as operation out of bounds")
+	if i == 0 || i == len(equation)-1 {
+		return nil, equation[i].CreateAstError("Operation out of bounds")
 	}
 
-	token := (*equation)[i]
+	token := equation[i]
 
 	operand, err := getOperandFromToken(&token)
 
@@ -189,237 +186,69 @@ func buildExpression(equation *[]lexer.Token, variables *map[string]DataType) (I
 		return nil, err
 	}
 
-	var left IExpression
-	var right IExpression
+	left, err := buildExpression(equation[:i], variables)
 
-	if (i > 1) {
-		slice := (*equation)[0:i]
-
-		parenCheck := (*equation)[i - 1]
-
-		// Left side of operation will be RPAREN if it is a PAREN
-		if (parenCheck.Type == lexer.LPAREN) {
-			return nil, fmt.Errorf("buildBinaryExpression: Wrong parenthesis on LHS of operand")
-		}
-
-		if (parenCheck.Type == lexer.RPAREN) {
-			start, err := getLParen(equation, i - 1)
-			
-			if err != nil {
-				return nil, err
-			}
-
-			slice = (*equation)[start+1:i-1]
-		}
-
-		leftExp, err := buildExpression(&slice, variables)
-
-		if err != nil {
-			return nil, err
-		}
-
-		left = leftExp
-	} else {
-		token := (*equation)[i - 1]
-
-		if (token.Type == lexer.IDENT) {
-			dataType, ok := (*variables)[token.Value]
-
-			if !ok {
-				return nil, fmt.Errorf("buildExpression: variable %s not defined", token.Value)
-			}
-
-			left = VariableExpression{Name: token.Value, DataType: dataType}
-		} else {
-			left, err = getLiteralExpression(&token)
-
-			if err != nil {
-				return nil, err
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	if (i < len(*equation) - 2) {
-		slice := (*equation)[i+1:len(*equation)]
+	right, err := buildExpression(equation[i+1:], variables)
 
-		parenCheck := (*equation)[i + 1]
-
-		// Right side of operation will be LPAREN if it is a PAREN
-		if (parenCheck.Type == lexer.RPAREN) {
-			return nil, fmt.Errorf("buildBinaryExpression: Wrong parenthesis on RHS of operand")
-		}
-
-		if (parenCheck.Type == lexer.LPAREN) {
-			end, err := getRParen(equation, i + 1)
-			
-			if err != nil {
-				return nil, err
-			}
-
-			slice = (*equation)[i+2:end]
-		}
-
-		rightExp, err := buildExpression(&slice, variables)
-
-		if err != nil {
-			return nil, err
-		}
-
-		right = rightExp
-	} else {
-		token := (*equation)[i + 1]
-
-		if (token.Type == lexer.IDENT) {
-			dataType, ok := (*variables)[token.Value]
-
-			if !ok {
-				return nil, fmt.Errorf("buildExpression: variable %s not defined", token.Value)
-			}
-
-			right = VariableExpression{Name: token.Value, DataType: dataType}
-		} else {
-			right, err = getLiteralExpression(&token)
-
-			if err != nil {
-				return nil, err
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	if left.GetDataType() != Float && left.GetDataType() != Int {
-		return nil, fmt.Errorf("buildBinaryExpression: LHS as not int or float")
-	}
-
-	if right.GetDataType() != Float && right.GetDataType() != Int {
-		return nil, fmt.Errorf("buildBinaryExpression: LHS as not int or float")
-	}
-
-	dataType := Int
+	dataType := data.Int
 
 	// Assumes that the expression only contains numbers
-	if (left.GetDataType() == Float || right.GetDataType() == Float) {
-		dataType = Float
+	if left.GetDataType() == data.Float || right.GetDataType() == data.Float {
+		dataType = data.Float
 	}
 
-	expression := BinaryExpression{Operand: operand, Left: left, Right: right, DataType: dataType}
+	expression := data.BinaryExpression{Operand: operand, Left: left, Right: right, DataType: dataType}
 
 	return expression, nil
 }
 
-func getOperandFromToken(token *lexer.Token) (BinaryOperator, error) {
-	switch ((*token).Type) {
-	case lexer.ADD:
-		return Add, nil
-	case lexer.SUBTRACT:
-		return Subtract, nil
-	case lexer.DIVIDE:
-		return Divide, nil
-	case lexer.MULTIPLY:
-		return Multiply, nil
+func getOperandFromToken(token *data.Token) (data.BinaryOperator, *data.AstError) {
+	switch (*token).Type {
+	case data.ADD:
+		return data.Add, nil
+	case data.SUBTRACT:
+		return data.Subtract, nil
+	case data.DIVIDE:
+		return data.Divide, nil
+	case data.MULTIPLY:
+		return data.Multiply, nil
 	default:
-		return Add, fmt.Errorf("Invalid operand type %+v", token)
+		return data.Add, token.CreateAstError(fmt.Sprintf("Invalid operand type %+v", token))
 	}
 }
 
-func getLiteralExpression(token *lexer.Token) (IExpression, error) {
-	switch (token.Type) {
-	case lexer.INT:
-		i, _ := strconv.ParseInt(token.Value, 10, 0)
-		expression := LiteralExpression[int64]{ Data: i, DataType: Int }
+func getLiteralExpression(token *data.Token) (data.IExpression, *data.AstError) {
+	switch token.Type {
+	case data.INT:
+		i, err := strconv.ParseInt(token.Value, 10, 0)
+
+		if err != nil {
+			return nil, token.CreateAstError(fmt.Sprintf("Invalid integer type %q", token.Value))
+		}
+
+		expression := data.LiteralExpression[int64]{Data: i, DataType: data.Int}
 		return expression, nil
-	case lexer.FLOAT:
-		i, _ := strconv.ParseFloat(token.Value, 0)
-		expression := LiteralExpression[float64]{ Data: i, DataType: Float }
+	case data.FLOAT:
+		i, err := strconv.ParseFloat(token.Value, 0)
+
+		if err != nil {
+			return nil, token.CreateAstError(fmt.Sprintf("Invalid float type %q", token.Value))
+		}
+
+		expression := data.LiteralExpression[float64]{Data: i, DataType: data.Float}
 		return expression, nil
-	case lexer.STRING:
-		expression := LiteralExpression[string]{ Data: token.Value, DataType: String }
+	case data.STRING:
+		expression := data.LiteralExpression[string]{Data: token.Value, DataType: data.String}
 		return expression, nil
 	default:
-		return nil, errors.New("parseAssign: Bad data type on expression")
-	}
-}
-
-func getLParen(tokens *[]lexer.Token, LParen int) (int, error) {
-	depth := 1
-
-	for i := LParen - 1; i >= 0; i-- {
-		token := (*tokens)[i]
-
-		switch token.Type {
-		case lexer.RPAREN:
-			depth += 1
-		case lexer.LPAREN:
-			depth -= 1
-		}
-
-		if (depth == 0) {
-			return i, nil;
-		}
-	}
-
-	return -1, fmt.Errorf("getLParen: could not find left parenthesis")
-}
-
-func getRParen(tokens *[]lexer.Token, RParen int) (int, error) {
-	depth := 1
-
-	for i := RParen + 1; i < len(*tokens); i++ {
-		token := (*tokens)[i]
-
-		switch token.Type {
-		case lexer.RPAREN:
-			depth -= 1
-		case lexer.LPAREN:
-			depth += 1
-		}
-
-		if (depth == 0) {
-			return i, nil;
-		}
-	}
-
-	return -1, fmt.Errorf("getRParen: could not find right parenthesis")
-}
-
-func unaryFix(tokens *[]lexer.Token) {
-	// Places to insert a zero (the index of the subtract symbol to insert before)
-	zeroPlaces := []int{}
-
-	for i, token := range (*tokens) {
-		if token.Type != lexer.SUBTRACT {
-			continue
-		}
-		
-		// not going to throw syntax error because that will be handled elsewhere
-		if i == len(*tokens) - 1 {
-			break
-		}
-
-		// Subtract at start of equation
-		if i == 0 && token.Type == lexer.SUBTRACT {
-			zeroPlaces = append(zeroPlaces, 0)
-			continue
-		}
-
-		switch ((*tokens)[i - 1].Type) {
-		case lexer.INT, lexer.FLOAT, lexer.IDENT:
-			continue
-		default:
-			zeroPlaces = append(zeroPlaces, i)
-		}
-	}
-
-	for i := len(zeroPlaces) - 1; i >= 0; i-- {
-		pos := zeroPlaces[i]
-
-		newTokens := make([]lexer.Token, 0, len(*tokens)+1)
-		newTokens = append(newTokens, (*tokens)[:pos]...)
-		newTokens = append(newTokens, lexer.Token{
-			Type:  lexer.INT,
-			Value: "0",
-		})
-		newTokens = append(newTokens, (*tokens)[pos:]...)
-
-		*tokens = newTokens
+		return nil, token.CreateAstError(fmt.Sprintf("Invalid data type: %q", token.Type))
 	}
 }

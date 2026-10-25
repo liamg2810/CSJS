@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -10,41 +9,42 @@ import (
 	"liamg2810.github.io/csjs/lexer"
 )
 
+const fileName string = "test.csjs"
+
 func main() {
-	contents, err := extractContents("./variables.csjs")
+	contents, err := extractContents("./" + fileName)
 
 	if err != nil {
 		panic(err)
 	}
 
-	tokens, err := lexer.Parse(*contents)
+	context, err := lexer.Parse(*contents)
+
+	context.FileName = fileName
 
 	if err != nil {
 		panic(err)
 	}
 
-	built, err := ast.Build(tokens)
+	built, astError := ast.Build(context)
 
-	if err != nil {
+	if astError != nil {
+		astError.Output(*context)
+		return
+	}
+
+	data := ast.Debug(built)
+
+	if err := writeContents("./output.txt", []byte(data)); err != nil {
 		panic(err)
 	}
 
-	data, err := json.MarshalIndent(built, "", " ")
-
-	if err != nil {
-		panic(err)
-	}
-
-	if err := writeContents("./output.json", data); err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("output to json\n")
+	fmt.Printf("output to output.txt\n")
 }
 
 func extractContents(path string) (*string, error) {
-	file, err := os.Open(path);
-	
+	file, err := os.Open(path)
+
 	if err != nil {
 		return nil, err
 	}
